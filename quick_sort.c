@@ -1,6 +1,11 @@
 /*
 This is code for quick sort
 for more details on how it is implemented refer : https://www.youtube.com/watch?v=Vtckgz38QHs&t=279s
+
+Steps:
+	1. Choose a pivot
+	2. Partition the array
+	3. Recursively sort the sub arrays untill the given subarray cannot be further divided.
 */
 
 /*Function for swapping*/
