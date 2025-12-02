@@ -47,6 +47,7 @@ int main()
             printf("%ld\t",*(*(a+i)+j));
         }
         
+        
     }
     printf("\r\nEnd");
 
