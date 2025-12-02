@@ -99,8 +99,11 @@ int main() {
 
 
 
+/*
 Even Faster Version (Using volatile + no memcpy)
 For ultra-high performance (e.g. audio, DMA):
+But this is for one character not for a full string.
+*/
 Ctypedef struct {
     volatile uint32_t write_idx;
     volatile uint32_t read_idx;
