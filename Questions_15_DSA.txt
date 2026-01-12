@@ -1,0 +1,59 @@
+#,Question (Exact Wording Used in Real Interviews),Difficulty,Companies Asked,Why It's Classic
+1,Reverse a linked list (iterative + recursive),Easy,Literally everyone,Tests pointer manipulation
+2,Detect and remove loop in a linked list (Floyd’s cycle),Medium,"Amazon, Microsoft, Google",Tortoise-hare is a must-know
+3,Implement LRU Cache (get + put in O(1)),Medium-Hard,"Facebook, Google, Amazon",Hash map + doubly linked list combo
+4,Find missing number in 1 to N array (XOR trick),Easy-Medium,"Microsoft, Amazon",Bit manipulation classic
+5,Trapping Rain Water (two-pointer or stack),Hard,"Google, Bloomberg, Amazon",Two-pointer optimization is beautiful
+6,Merge K sorted linked lists (min-heap or divide-conquer),Hard,"Amazon, Facebook, Apple",Heap + linked list
+7,"Implement pow(x, n) in O(log n) – handle negative",Medium,"Microsoft, Google",Binary exponentiation
+8,Maximum subarray (Kadane’s algorithm),Medium,Almost every company,DP classic
+9,Rotate a matrix 90° clockwise in-place,Medium,"Apple, Microsoft, Amazon",Matrix manipulation
+10,Implement atoi() – convert string to integer,Medium,"Facebook, Microsoft",Edge cases galore
+11,Find first non-repeating character in string,Easy-Medium,"Amazon, Adobe",Hash map first use case
+12,Serialize and deserialize a binary tree,Hard,"Google, Facebook",Tree + string manipulation
+13,Word break problem (DP or Trie + DFS),Hard,"Google, Amazon",DP + backtracking
+14,Implement a thread-safe singleton in C/C++,Medium,"Bloomberg, Jane Street",Double-checked locking
+15,Remove minimum parentheses to make string valid (the one we just did),Medium-Hard,"Google, Amazon, Adobe",Stack + two-pass tricks
+
+
+
+Question,Where
+Design a tiny malloc/free (fixed-size allocator),"Jane Street, Google, Meta"
+Reverse words in a string in-place (no extra space),"Microsoft, Amazon"
+Find median from data stream (two heaps),"Google, Bloomberg"
+Implement strtok() from scratch,Embedded interviews
+Print matrix in spiral order,"Amazon, Apple"
+Longest valid parentheses substring,"Facebook, Google"
+Copy linked list with random pointer,"Amazon, Microsoft"
+
+
+
+// 1. Reverse linked list
+Node* reverse(Node* head) {
+    Node *prev = NULL, *next;
+    while (head) {
+        next = head->next;
+        head->next = prev;
+        prev = head;
+        head = next;
+    }
+    return prev;
+}
+
+// 4. Missing number (1 to n)
+int missing(int a[], int n) {
+    int xor = 0;
+    for(int i=1;i<=n;i++) xor ^= i ^ a[i-1];
+    return xor;
+}
+
+// 7. Power(x,n)
+double pow(double x, int n) {
+    if(n<0) return 1/pow(x,-n);
+    double res=1;
+    while(n){
+        if(n&1) res *= x;
+        x *= x; n>>=1;
+    }
+    return res;
+}

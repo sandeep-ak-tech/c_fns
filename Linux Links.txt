@@ -1,0 +1,14 @@
+Linux Links
+
+
+Open Source Linux - https://git.kernel.org/
+Linux Branch Maintained by Torvalds - https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/
+
+i2c drivers are available under     /root/drivers/i2c => https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/i2c
+
+Latest Stable version is available at https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/
+
+Kurien Changes are provided as patch by making few check box tick changes and then then building the project with the latest version in the backports and then we test functionality. After that we share the backports with the customer.
+https://git.kernel.org/pub/scm/linux/kernel/git/backports/backports.git/
+
+i2c touch pad project - https://github.com/Infineon/linux-i2c-touchpad
