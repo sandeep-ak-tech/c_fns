@@ -1,0 +1,30 @@
+SETS
+SET in data structures refers to a collection of unique elements (no duplicates allowed). It is an abstract data type (ADT) based on the mathematical concept of a set.
+
+Main Properties of a Set
+
+    1. Uniqueness → No duplicate elements
+    2. Unordered (most common implementation) or sometimes ordered
+
+Main operations:
+    1. Insert / Add element
+    2. Delete / Remove element
+    3. Contains / Membership test (is element present?)
+    4. Union (A ∪ B)
+    5. Intersection (A ∩ B)
+    6. Difference (A − B)
+    7. Subset check, etc.
+
+
+Quick C/C++ / low-level examples you might see in interviews/projects
+
+    1. Unique error codes collected during a long-running process
+    2. List of open file descriptors (to check if already open)
+    3. Set of visited nodes in graph traversal (BFS/DFS)    
+    4. Blacklist/whitelist of IP ranges or user IDs
+    5. Deduplicate log lines or network packets
+
+
+SETS are implemented in c using Hash table (chaining / open addressing). This is because:
+Insert      Delete      Contains  Ordered?  SpaceBest       Use-case
+O(1)avg     O(1)avg     O(1)avg     No      O(n)            Most common – general purpose
