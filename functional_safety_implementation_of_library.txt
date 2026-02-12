@@ -1,0 +1,98 @@
+Safety Library
+1***CPU Register - 32bit
+Stuck at bits - Checkboard pattern - write, read back and verify AA and then 55, written in assembly and stored in .s file
+R0 to R12 R13 = SP, R14= lr Link Register =  stores the return program counter during function calls, R15=PC = Not tested as it will affect the program flow
+    /* R8 registers test */
+    MOV   R1, R8
+    LDR   R0, =0xAAAAAAAA
+    MOV   R8, R0
+    CMP   R8, R0
+    MOV   R8, R1
+    BNE   test_asm_fail
+
+    LDR   R0, =0x55555555
+    MOV   R8, R0
+    CMP   R8, R0
+    MOV   R8, R1
+    BNE   test_asm_fail
+	
+2***FPU Register Test - 32 single-precision (32-bit) registers
+Testing same as above
+
+3***Program Counter PC - R15
+declare two functions at address 0x5555 and 0xAAAA. This can be done by placing the functions (SelfTest_PC5555 and SelfTest_PCAAAA) at these address in main.c and also updating  linkerscript. Now call these functions=> The PC is loaded with checker board pattern => Test exeuted as expected.
+Linker Script:
+    SELF_TEST_SECTION_PC5555 0x10155554 :
+    {
+		. = 0x00;
+		KEEP (*(PC5555))
+	} >flash = ORIGIN(flash)
+
+	SELF_TEST_SECTION_PCAAAA 0x101AAAA8 :
+	{2***
+		. = 0x00;
+		KEEP (*(PCAAAA))
+
+	} >flash = ORIGIN(flash)
+Main.c	
+#if defined(__GNUC__)
+static uint8_t SelfTest_PC5555(void) __attribute__((noinline, section(SELF_TEST_SECTION_PC5555)));
+static uint8_t SelfTest_PCAAAA(void) __attribute__((noinline, section(SELF_TEST_SECTION_PCAAAA)));
+
+
+4***Program Flow Test
+Two complementary counters counter1= 0x0000 Conter2=0xFFFF => counter1 xor counter2 = oxFFFF always
+unique numbers are added to or subtracted from complementary counters before block execution and immediately after execution
+
+5***Interrupt Handling and Execution Testing
+Timer_1 is configured to generate 25 interrupts per 1 ms. isr_1 counts the number of interrupts that occurred. If the counted value in isr_1 is  22 and ≤ 27, then the test is passed. 
+Period = 1000
+Input Clock =25MHz
+1 clock pulse or period takes (time) = 1/25MHz  second
+count till 1000 (period) = 1000 x 1/25MHz second => after counting till 1000 i.e after 1000 x 1/25MHz second it generates an interrupt => In the ISR we increment a variable count++
+so to increment the value of count from 0 to 1 => 1000 x 1/25MHz second
+1second = 25MHz/1000 counts
+
+Run the timer counter for 1ms (1x10^-3) and see what is the value of variable count = > 1x10^-3 x 25MHz/1000 counts = 25.
+
+So we keep a threshold check i.e. 22 ≤ count ≤ 27 => test passes
+
+6***Clock Test
+It verifies the reliability of the internal main oscillator (IMO) system clock – It is within the tolerance of the internal low-speed oscillator (ILO). The 32 kHz ILO clock is accurate to ± 10 percent.
+Timer 0 
+	Input Frequency = 100x10^6
+	1 clock pulse or period takes (time) = 1/100x10^6  second
+	
+	Period = 10^5 counts
+	Time for 10^5 counts = 10^5 x 1/100x10^6 = 1/1000 seconds
+	
+	1 second = 1000 counts 
+	1ms = 1 count
+	
+	Delay = 1ms
+	i.e. we created a delay of 1ms using this timer.
+WDT
+	Input Frequency = 32Khz (ILO)
+	Get initial count of WDT
+	Start counter for 1ms
+	Get WDT final count in Timer 0 ISR
+	
+	input frequecy 32KHz = 32000 counts in a sewcond = 32 counts in 1ms => 1ms delay is created using Timer
+	20<(Final count – initial count = 32)<80 => success 
+
+7***Stack Overflow/underflow Test
+a reserved fixed-memory block at the end of the stack is filled with a predefined pattern, and the test function is periodically called to verify it. If stack overflow occurs, the reserved block will be overwritten with corrupted data bytes, which should be treated as an overflow error
+
+8***DAC test
+In this test, the output of the DAC is routed to the input of the ADC. The DAC test is considered successful if the input to the DAC and the output from the ADC (to which the DAC output is routed) are the same.
+
+***Comparator test = High or low-speed
+***OpAmp test = Unity gain OPAMP=> output fed to ADC and checked againist input volatage.
+
+***Uart internal LB - UART internal data loopback test using smart-io
+
+9***Watchdog Test
+The function starts the WDT and runs an infinite loop. If the WDT works, it generates a reset. After the reset, the function analyzes the reset source. If the watchdog is the source of the reset, the function returns; otherwise, the infinite loop executes.
+
+10***PWM test
+Configure a 16-bit PWM to run at 1/3 duty ON, 2/3 OFF duty cycle with a 1 millisecond period. Start the PWM. Run the CPU in a loop for 5 milliseconds. Poll/ Read and Count the instances of 0 and 1 output.The test is successful if the off/on ratio is between 15/8 and 17/8.

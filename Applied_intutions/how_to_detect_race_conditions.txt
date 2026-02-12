@@ -1,0 +1,214 @@
+
+Good — this is a very real problem in embedded C, especially on ARM MCUs where you have
+main loop + interrupts + DMA + RTOS tasks all touching the same memory.
+
+First important thing:
+A race condition is NOT a compiler warning problem.
+It is a timing-dependent bug — the code works 99% of the time and fails only when two execution contexts access the same data at the wrong instant.
+So detecting it is less about reading code and more about proving that two execution contexts can overlap
+
+1. Where race conditions actually come from (embedded ARM)
+In MCU firmware, a race condition exists whenever two independent execution contexts access the same variable and at least one writes.
+Your contexts are:
+		1. Main loop (while(1))
+		2. Interrupt Service Routine (ISR)
+		3. DMA completion callbacks
+		4. RTOS tasks (if using FreeRTOS/Zephyr etc.)
+		5. Peripheral hardware registers (yes — hardware is also a “thread”)
+So the moment you see:
+
+uint8_t rx_done;
+
+and it is used in both ISR and main → you must assume race condition until proven safe.
+
+2. The #1 hidden race in ARM firmware (VERY common)
+Flag updated in interrupt, read in main
+
+	uint8_t uart_rx_complete = 0;
+
+	void USART1_IRQHandler(void)
+	{
+	uart_rx_complete = 1;
+	}
+
+	int main()
+	{
+	while(1)
+	{
+	if(uart_rx_complete)
+	{
+	process_packet();
+	uart_rx_complete = 0;
+	}
+	}
+	}
+	
+Looks perfectly fine.
+It is not safe.
+Why?
+Because this is not atomic at CPU level:
+
+	LOAD uart_rx_complete
+	COMPARE
+	CALL
+	STORE uart_rx_complete
+
+If interrupt occurs between those instructions → you lose an event. This is called a lost update race.
+
+3. How to detect a race condition
+You cannot rely on testing alone. Instead, use this mental checklist (firmware engineers actually use this):
+
+Step 1 — Identify shared variables
+Search your codebase: for variables used in ISR + used outside ISR
+
+Anything matching that is suspect.
+Examples:
+	a. buffers
+	b. flags
+	c. counters
+	d. state machines
+	e. queue indexes
+	f. DMA descriptors
+	
+Step 2 — Check for non-atomic operations
+On ARM Cortex-M:
+	Type 	Atomic?
+	8-bit   yes
+	16-bit  yes
+	32-bit  yes (aligned)
+	64-bit  ❌ NO
+	
+But operations are not atomic, only the load/store is.
+
+This is NOT atomic: counter++;
+It becomes: 
+
+LDR
+ADD
+STR
+
+If ISR also increments => it will add to the race condition.
+
+Step 3 — Look for read-modify-write (MOST DANGEROUS)
+If you see:
+	x++;
+	x--;
+	x |= FLAG;
+	x &= ~FLAG;
+	
+and x is shared → you have a race.
+
+Step 4 — Volatile does NOT fix race conditions
+This is one of the biggest misconceptions in embedded.
+
+volatile int flag;
+
+volatile only prevents compiler optimization.
+It does NOT prevent:
+	• interrupt preemption
+	• partial updates
+	• lost writes
+	• memory ordering issues
+	
+Volatile fixes visibility, not synchronization.
+
+4. Practical techniques to expose race conditions - Because races are timing bugs, we try to force the timing to break.
+
+Technique 1 — Artificial interrupt storm (very effective)
+Increase interrupt frequency drastically.
+	Example:
+	Change timer interrupt from 1ms → 50µs
+	Suddenly:
+	UART corrupts
+	state machine locks
+	buffer overruns
+	Boom → race found.
+	
+Technique 2 — Add delay in critical code
+Add:
+	for(volatile int i=0;i<5000;i++);
+inside ISR or main processing. If behaviour changes → race.
+Because you changed timing relationship.
+
+Technique 3 — Toggle GPIO pins (professional debugging trick)
+Inside ISR:
+
+	GPIO_SET(DEBUG_PIN);
+	GPIO_CLEAR(DEBUG_PIN);
+Inside main:
+
+	GPIO_TOGGLE(MAIN_PIN);
+	
+View on logic analyzer. If signals overlap unexpectedly → concurrency problem.
+Firmware engineers do this a lot because: Oscilloscope is the truth. Logs lie.
+
+Technique 4 — Watchpoints (EXTREMELY powerful)
+Using JTAG/SWD debugger:
+Set data watchpoint on a variable.
+
+Example:
+	Watch uart_rx_complete
+	break on write
+	
+If it changes while main is accessing → race confirmed.
+ARM DWT (Data Watchpoint and Trace) is made exactly for this.
+
+Technique 5 — Make system slower
+	Lower CPU clock:
+	Copy code
+
+	168 MHz → 16 MHz
+	If bug disappears → race condition.
+	Classic symptom.
+	
+5. Special embedded races you must always suspect
+	1) Ring buffer indexes
+	head++;
+	tail++;
+ISR writes, main reads → corruption.
+
+2) Multi-byte peripheral registers
+Example:
+
+	uint16_t adc_value;
+	If read while DMA writing → torn value.
+	
+3) DMA buffers (VERY COMMON)
+CPU:
+
+	process(buffer);
+	DMA simultaneously writing buffer.
+	You process half-old half-new data.
+	
+6. Correct ways to fix (not just detect)
+Method 1 — Critical section (bare-metal)
+
+	__disable_irq();
+	uart_rx_complete = 0;
+	__enable_irq();
+	
+Method 2 — Atomic operations (ARM)
+Use exclusive access instructions:
+
+	LDREX / STREX
+	(or CMSIS atomic functions)
+	
+Method 3 — Double buffering (best for DMA)
+Never read a buffer DMA is writing.
+
+	ping buffer
+	pong buffer
+	
+Method 4 — RTOS primitives
+	• mutex
+	• semaphore
+	• queue
+	• event flags
+	
+	
+
+The fastest way to mentally detect a race, Ask this one question:
+“Can an interrupt occur in the middle of this line?”
+If yes → assume race until protected.
+If you want, paste a small piece of your firmware (ISR + main loop or driver code).
+I’ll point out exactly where a race can happen — this is actually how senior firmware reviews are done in companies.
