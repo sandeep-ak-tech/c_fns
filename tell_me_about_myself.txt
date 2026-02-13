@@ -1,0 +1,19 @@
+Tell me about yourself :
+
+I currently work in Infineon Technologies as Staff Engineer.
+
+I work on different projects right from Assembly level coding, Baremetal, FreeRTOS based and to OS (Linux) based.
+
+I have worked for Functional Safety for PSOC6 and PSOC4 Cortex M Based controllers. And For PSOC Edge Cortex M55M33.
+
+Firmware development
+IOT Projects
+AI-ML Projects
+Device Drivers for Customer specific applications
+
+
+Bosch -  
+On Automotive domain mainly. Ignition Control team.
+
+
+I hold a masters degree in Embedded Systems and I have done my Btech in Electronics and Communication.

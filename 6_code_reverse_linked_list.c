@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
-
+/*
+Original list:   1 → 2 → 3 → 4 → 5 → NULL
+Reversed (iter): 5 → 4 → 3 → 2 → 1 → NULL
+*/
 // Node structure
 struct Node {
     int data;
@@ -85,4 +88,24 @@ int main() {
     freeList(head);
     
     return 0;
+}
+
+// -----------------------------
+// Method 2: Recursive
+// -----------------------------
+struct Node* reverseRecursive(struct Node* head) {
+    // Base cases
+    if (head == NULL || head->next == NULL) {
+        return head;
+    }
+    
+    // Recursively reverse the rest of the list
+    struct Node* newHead = reverseRecursive(head->next);
+    
+    // Now head->next is the last node of reversed list
+    // Make head the last node
+    head->next->next = head;
+    head->next = NULL;
+    
+    return newHead;
 }
