@@ -1,0 +1,19 @@
+/dts-v1/;
+/plugin/;
+/ {
+    compatible = "brcm,bcm2711";
+
+    fragment@0 {
+        target-path = "i2c1";
+        __overlay__ {
+            #address-cells = <1>;
+            #size-cells = <0>;
+
+            psoc4: psoc4@8 {
+                compatible = "i2c-psoc4,my_device";
+                reg = <0x08>;
+                status = "okay";
+            };
+        };
+    };
+};
