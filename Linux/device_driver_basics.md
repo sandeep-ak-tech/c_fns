@@ -165,7 +165,7 @@ static int psoc4_probe(struct i2c_client *client)
 |Layer in kernel            |Lower-level (end-device driver)                                                               |Higher-level (bus/subsystem infrastructure)                                                        |
 |Can it be both?            |A driver can be a character driver and part of a bus (very common)                            |--                                                                                               |
 
-#### Linux Device Driver Structure - Character Driver
+#### Linux Device Driver Structure - Bus Driver
 __bus_register() -> driver_register() -> device_register()__
 1. Define struct bus_type and provide functions for the bus
     * .match function - at least this function is needed. optional functions = .probe, .remove, .uevent, .shutdown etc...
