@@ -1,4 +1,17 @@
 ### I2C Touchpad Project
+It's a modern I²C client/sub-device driver (classic I2C subsystem style):
+
+* It registers itself with the I²C core using i2c_driver → .probe / .remove callbacks.
+* It binds to I²C devices described in the Device Tree (via compatible string, likely something like "infineon,psoc4-capsense" or similar).
+*  The device appears under the I²C bus it is physically attached to (e.g. /sys/bus/i2c/devices/1-0015 or whatever the address is).
+* The driver exposes control and data via sysfs attributes under that I²C device directory, for example:
+```
+/sys/bus/i2c/devices/i2c-1/psoc4-capsense/
+├── fw_ver
+├── (other touchpad status, config, raw data, gestures, etc.)
+```
+eg: `cat /sys/bus/i2c/devices/i2c-1/psoc4-capsense/fw_ver` returns FW version.
+
 #### User space to kernel driver to hardware (PSOC4) Flow
 From userspace we make a call:
 
