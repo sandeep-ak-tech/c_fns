@@ -1,0 +1,2 @@
+Application for ping-pong buffer -  https://github.com/Infineon/mtb-example-psoc6-uart-transmit-receive-dma/blob/master/README.md#design-and-implementation
+DMA structure in PSOC6 https://documentation.infineon.com/psoc6/docs/kmz1667480347498

@@ -6,7 +6,8 @@
  * 2. MAX9768.c
  * 3. max9850.c
  * 
- * 
+ * PCM5102 - LRCK (pin 15), BCK (pin 13), and DIN (pin 14)
+ * Data formats are selected using the FMT (pin 16) -to be set Low for I2S
  * Author: Sandeep A K
  */
 
@@ -20,6 +21,8 @@
 #include <sound/soc.h>
 #include <sound/tlv.h>
 
+/*Register specific to Codec that we are using
+Array of {reg, val} with default values*/
 static const struct reg_default codec_default_regs[] = {
 	{ 0x0, 0x00 },//###
 	{ 0x1, 0x00 },//###
@@ -31,6 +34,7 @@ static const struct snd_kcontrol_new codec_controls[] = {
     //###
 };
 
+/*DAPM (Dynamic Audio Power Management) - defines audio paths and power domains.*/
 static const struct snd_soc_dapm_widget codec_dapm_widgets[] = {
     //###
 };
@@ -51,13 +55,13 @@ static const struct snd_soc_component_driver codec_component_driver = {
 };
 
 static const struct regmap_config codec_regmap_config = {
-    .val_bits = 6,
-    .reg_bits = 2,
+    .val_bits = 6, // value bits
+    .reg_bits = 2, //Address bits
 
-    .max_regiter = ,//###
+    .max_regiter = ,//### Highest Register address
 
-    .cache_type = ,//###
-    .reg_defaults = codec_default_regs,
+    .cache_type = ,//### REGCACHE_RBTREE or REGCACHE_FLAT cache type
+    .reg_defaults = codec_default_regs, //Array of {reg, val} with default values
     .num_reg_defaults = ARRAY_SIZE(codec_default_regs),
 };
 

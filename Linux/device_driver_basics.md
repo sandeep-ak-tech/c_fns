@@ -13,6 +13,14 @@
 | Example use case | Learning module basics, debug prints | Serial port, I2C sensor, GPIO, custom hardware, virtual device |
 | Code complexity | Very simple (~10 lines) | Much more (~100+ lines minimum) |
 
+|Location                  |What gets created                                           |Created by whom?        |Exact kernel moment / function call                                                 |Visible to user almost immediately after?  |Typical path example                  |
+|--------------------------|------------------------------------------------------------|------------------------|------------------------------------------------------------------------------------|-------------------------------------------|--------------------------------------|
+|**/sys/class/xxx          |The class directory itself                                  |Kernel                  |class_create(THIS_MODULE, "myclass")                                                |Yes — right after the call succeeds        |/sys/class/myclass/                   |
+|/sys/class/xxx/yourdevice/|Device subdirectory + attributes (dev, uevent, power/, etc.)|Kernel                  |device_create(cls, NULL, devt, NULL, "mydevice")                                    |Yes — right after the call succeeds        |/sys/class/myclass/mydevice/          |
+|/sys/devices/...          |The "real" device location (bus topology)                   |Kernel (usually earlier)|During device registration (device_register(), platform_device_add(), probe(), etc.)|Yes                                        |/sys/devices/platform/.../mydevice/   |
+|/dev/mydevice             |The actual character/block device node                      |udev (userspace daemon) |When udev receives the uevent sent by device_create() → then udev calls mknod()     |Usually < 100 ms later (but not guaranteed)|/dev/mydevice (major:minor from dev_t)|
+
+			
 
 ####  Quick Summary – The Key Difference
 
@@ -69,6 +77,25 @@ Now `ls -l /dev` -> lists all devices with major and minor number
     * sends uevent to userspace
     * causes udev to automatically ceate the actual /dev/node with correct major/ minor/ permissions
     * It adds device instance to sysfs (/sys/class/my_class/mydeviceX)
+#### Filesystem Hierarchy Standard (FHS)
+The directory structure you're referring to in Linux (with `/`, `/bin`, `/etc`, `/home`, `/proc`, `/sys`, `/dev`, `/usr`, etc.) is officially called the Filesystem Hierarchy Standard — most commonly abbreviated as FHS.
+
+| Feature              | /proc                                 | /sys (sysfs)                              | /dev                                      |
+|----------------------|---------------------------------------|-------------------------------------------|-------------------------------------------|
+| Original purpose     | Process info                          | Clean structured device & driver info     | Access to hardware & special devices      |
+| Organization         | Flat + messy (everything dumped here) | Very hierarchical (bus → device → driver) | Mostly flat (udev can create subdirs)     |
+| Main usage today     | Processes + legacy kernel parameters  | Modern hardware/driver control            | Talking to devices                        |
+| Write support        | Limited (mostly /proc/sys/)           | Very common (tunables & control)          | Almost never                              |
+
+
+Ex:- `cat /proc/cpuinfo`          - CPU model, cores, flags
+      `tree -L 2 /sys/bus/i2c/devices/` - See I2C devices tree
+
+```
+/dev → "I want to read/write hardware or special device"
+/proc → "I want to know what the kernel / processes are doing right now" (classic info)
+/sys  → "I want to control or get detailed structured info about devices/drivers" (modern way)
+```
 
 #### Basics of sysfs
 /sys is a virtual filesystem (sysfs) mounted in user space.
@@ -165,7 +192,7 @@ static int psoc4_probe(struct i2c_client *client)
 |Layer in kernel            |Lower-level (end-device driver)                                                               |Higher-level (bus/subsystem infrastructure)                                                        |
 |Can it be both?            |A driver can be a character driver and part of a bus (very common)                            |--                                                                                               |
 
-#### Linux Device Driver Structure - Bus Driver
+#### Linux Device Driver Structure - Character Driver
 __bus_register() -> driver_register() -> device_register()__
 1. Define struct bus_type and provide functions for the bus
     * .match function - at least this function is needed. optional functions = .probe, .remove, .uevent, .shutdown etc...
@@ -190,11 +217,9 @@ __bus_register() -> driver_register() -> device_register()__
         * sends uevent to userspace
 7. class_create() + device_create()
     * creates class /sys/class/my_bus_class/  
-    * device_create() - creates device node /dev/my_node_0/ (if udev is running) and also creates symlink in /sys/class/my_bus_class/my_node_0
+    * device_create() - creates device node /dev/my_node_0/ and also creates symlink in /sys/class/my_bus_class/my_node_0
 
 The goal: The kernel wants to automatically bind (probe) a driver to a device as soon as both exist on the same bus, without caring which one was registered first.
 
 * When you register a driver (point 4): The kernel says, "Hey, a new driver just showed up. Let me check if any existing devices on this bus match it." It loops over all devices already on the bus, calls `.match(device, driver)` for each, and if yes, binds by calling driver`.probe(device)`.
 * When you register a device (point 6): The kernel says, "Hey, a new device just showed up. Let me check if any existing drivers on this bus match it." It loops over all drivers already on the bus, calls `.match(device, driver)` for each, and if yes, binds by calling driver`.probe(device)`.
-
-Key result: Binding (probe) happens exactly once per matching pair, but the kernel checks proactively at both registration points to cover all timing scenarios
