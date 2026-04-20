@@ -12,6 +12,8 @@ file_list = [
     "code_linked_list_palindrom.c",
     "find_loop_in_linked_list.c",
     "merge_two_sorted_linked_list.c",
+    "binary_search.c",
+    "find_index_in_rotated_sorted_array.c",
     "code_quick_sort.c",
     "code_square_root_log_fn.c",
     "code_square_root_simple_fn.c",
