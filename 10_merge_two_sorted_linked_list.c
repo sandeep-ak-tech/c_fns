@@ -30,30 +30,6 @@ struct Node* newNode(int data) {
 }
 
 // -----------------------------
-// Method 1: Iterative (Most commonly used in interviews)
-// NCPC = CPCN
-// -----------------------------
-struct Node* reverseIterative(struct Node* head) {
-    struct Node *prev = NULL;
-    struct Node *current = head;
-    struct Node *next = NULL;
-
-    while (current != NULL) {
-        // Store next
-        next = current->next;
-        
-        // Reverse current node's pointer
-        current->next = prev;
-        
-        // Move prev and current one step forward
-        prev = current;
-        current = next;
-    }
-    
-    return prev;    // prev becomes new head
-}
-
-// -----------------------------
 // Utility function to print list
 // -----------------------------
 void printList(struct Node* head) {
@@ -77,27 +53,66 @@ void freeList(struct Node* head) {
     }
 }
 
+// -----------------------------
+// Method 1: Iterative (Recommended for interviews)
+// -----------------------------
+// Merge two sorted linked lists
+struct Node* mergeSortedLists(struct Node* L1, struct Node* L2) {
+    if (L1 == NULL) return L2;
+    if (L2 == NULL) return L1;
+
+    struct Node* dummy = newNode(0);   // Dummy node to simplify code
+    struct Node* tail = dummy;
+
+    while (L1 != NULL && L2 != NULL) {
+        if (L1->data <= L2->data) {
+            tail->next = L1;
+            L1 = L1->next;
+        } else {
+            tail->next = L2;
+            L2 = L2->next;
+        }
+        tail = tail->next;
+    }
+
+    // Attach remaining nodes
+    if (L1 != NULL)
+        tail->next = L1;
+    else
+        tail->next = L2;
+
+    struct Node* head = dummy->next;
+    free(dummy);        // Free dummy node
+    return head;
+}
 int main() {
-    // Create sample list: 1 → 2 → 3 → 4 → 5
-    struct Node* head = newNode(1);
-    head->next = newNode(2);
-    head->next->next = newNode(3);
-    head->next->next->next = newNode(4);
-    head->next->next->next->next = newNode(5);
+// List 1: 2 → 5 → 8 → 9
+    struct Node* L1 = newNode(2);
+    L1->next = newNode(5);
+    L1->next->next = newNode(8);
+    L1->next->next->next = newNode(9);
 
-    printf("Original list:   ");
-    printList(head);
+    // List 2: 1 → 6 → 7 → 10
+    struct Node* L2 = newNode(1);
+    L2->next = newNode(6);
+    L2->next->next = newNode(7);
+    L2->next->next->next = newNode(10);
 
-    // Choose one method at a time (comment/uncomment as needed)
+    printf("List L1: ");
+    printList(L1);
+    printf("List L2: ");
+    printList(L2);
 
-    // Method 1 - Iterative (recommended for interviews)
-    head = reverseIterative(head);
-    printf("Reversed (iter): ");
-    printList(head);
+    struct Node* merged = mergeSortedLists(L1, L2);
 
-    // Clean up
-    freeList(head);
-    
+    printf("Merged Sorted List: ");
+    printList(merged);
+
+    // Free the allocated memory
+    freeList(L1);
+    freeList(L2);
+    freeList(merged);
+
     return 0;
 }
 

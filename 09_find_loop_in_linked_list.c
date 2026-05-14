@@ -35,7 +35,7 @@ int detectLoop(struct Node* head) {
     struct Node *slow = head;
     struct Node *fast = head;
 
-    while (slow != NULL && fast != NULL && fast->next != NULL) {
+    while (slow && fast && fast->next) {
         slow = slow->next;           // move 1 step
         fast = fast->next->next;     // move 2 steps
 
