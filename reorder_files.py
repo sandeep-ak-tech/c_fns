@@ -8,6 +8,7 @@ file_list = [
     "code_transpose_of_a_matrix.c",
     "code_mirror_of_a_matrix.c",
     "code_unique_id_generator.c",
+    "missing_number_in_1_to_N_array.c",
     "code_reverse_linked_list.c",
     "code_linked_list_palindrom.c",
     "find_loop_in_linked_list.c",
@@ -22,6 +23,7 @@ file_list = [
     "kth_largest_min_heap.c",
     "malloc_in_c_implementation.c",
     "sets.c",
+    "balance_parenthesis_to_balance_string.c",
     # Add more files here in the order you want
 ]
 
