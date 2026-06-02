@@ -13,6 +13,8 @@ file_list = [
     "code_linked_list_palindrom.c",
     "find_loop_in_linked_list.c",
     "merge_two_sorted_linked_list.c",
+    "flatten_multi_level_linked_list.c",
+    "intersection_point_of_two_singly_linked_list.c",
     "binary_search.c",
     "code_square_root_log_fn.c",
     "code_square_root_simple_fn.c",
