@@ -27,25 +27,14 @@ Both (180° rotation) - horizontal + vertical = rotate 180°
 #define COLUMN              3
 #define ROW                 3
 
-/*
-Use two pointers (left and right) starting from both ends of the current row:
-
-left starts at index 0
-right starts at index cols-1
-We move them toward the center, exchange elements at left and right positions.
-Stop when pointers meet or cross — middle element (if odd length) stays unchanged.
-*/
-
+/* Horizontal mirror: flip top <-> bottom rows */
 int horizontal_mirror_matrix(int (*matrix)[COLUMN])
 {
-    int tmp = 0;
-    for(int i=0;i<ROW;i++)
-    {
-        for(int left=0, right = COLUMN -1; left<right; left++,right--)
-        {
-            tmp = matrix[i][left];
-            matrix[i][left] = matrix[i][right];
-            matrix[i][right] = tmp;
+    for (int i = 0; i < ROW / 2; i++) {
+        for (int j = 0; j < COLUMN; j++) {
+            int temp = matrix[i][j];
+            matrix[i][j] = matrix[ROW - 1 - i][j];
+            matrix[ROW - 1 - i][j] = temp;
         }
     }
     
@@ -53,16 +42,14 @@ int horizontal_mirror_matrix(int (*matrix)[COLUMN])
 
 }
 
+/* Vertical mirror: flip left <-> right columns */
 int vertical_mirror_matrix(int (*matrix)[COLUMN])
 {
-    int tmp = 0;
-    for(int j=0; j<COLUMN; j++)
-    {
-        for(int top=0, bottom = ROW -1; top<bottom; top++,bottom--)
-        {
-            tmp = matrix[top][j];
-            matrix[top][j] = matrix[bottom][j];
-            matrix[bottom][j] = tmp;
+    for (int i = 0; i < ROW; i++) {
+        for (int j = 0; j < COLUMN / 2; j++) {
+            int temp = matrix[i][j];
+            matrix[i][j] = matrix[i][COLUMN - 1 - j];
+            matrix[i][COLUMN - 1 - j] = temp;
         }
     }
     

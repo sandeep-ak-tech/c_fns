@@ -1,0 +1,39 @@
+Steps: IMX8MM Board Bring-up, Embedded Artist(EA) = Base board and developer board are from EA
+1. Build the tool chain in the PC using YOCTO Recipie - https://confluencewikiprod.intra.infineon.com/spaces/CA/pages/3456247979/HOW+TO+Build+ARM+toolchain+for+Embedded+Artists+IMX8MQ+Board+using+Yocto
+2. Using Yocto Recipie we build the toolchain. Tool Chain is native build and whoch is building the cross compiler = i.e. we are making a cross compiler since we dont have cross compiler for IMx (.bb file Bitbake file = Make file = recipie file)
+3. via crosscompilation
+4. Install the crosscompiler = toolchain in the PC
+5. Clone linux source IMX - kernel source code from online linux iMX repo - https://confluencewikiprod.intra.infineon.com/spaces/CA/pages/3009337952/iMX8M+mini+bringup+Flashing+FMAC
+6. Setup the build environment
+	environment ? Set FLAGS like COmpile Flags, or Set Architecture ARM64 or 
+7. Build the Kernel (Make) after making changes in the .config of Kenrnel
+	.config = Kernel inbuild drivers selection, 32bit or 64bit kernel,
+8. Ater building we will get image at arch/arm64/boot/image 
+9. UUU tool to flash the image - http://imx.embeddedartists.com/ - The site has bootloader, dafult kernel and other file system images, dtb files, boot script, deault rootfs directory etc.. for a particular version image and the board
+10. Connect USB cable to IMX board, Jumper cnnection set-up for Boot mode,->reboot -> now in boot mode. Now our IMX device will pop like USB storage device
+11. uuu.exe file from our PC execute => sends/ copies all files in step 9 (downloaded files) to IMX device along with image
+
+Board Bring Up
+WiFi Cobo chips from Infineon supports SDIO or PCIe. BT = UART
+Device tree updated to include SDIO or PCI device entry
+edit dts file and build the dtb file and then place in the device tree and transfer dtb to board, by copying it to files folder inside uuu
+then run uuu.exe
+
+brcmfmac - WiFi driver
+now we build the driver from PC (cross compile)
+scp the ko files to IMX device
+insmod 
+
+ifconfig = device detect
+
+
+
+Yocto Project is an open-source framework for building custom embedded Linux distributions.
+A Yocto Recipe is a metadata file (with .bb extension) that tells the build system (BitBake) how to build a particular software component (package).
+
+Prompt: how is yocto and bitbake related
+
+ssh ifx@10.3.24.145
+password : ifx
+
+Kernel debug : Analysing Call trace using address, pc value etc..
