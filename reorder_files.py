@@ -22,10 +22,11 @@ file_list = [
     "code_quick_sort.c",
     "kth_large_quick_srt.c",
     "circular_buffer_non_blocking.c",
+    "producer_consumer_ring_buffer_mutex_threadsafe.c",
+    "balance_parenthesis_to_balance_string.c",
     "kth_largest_min_heap.c",
     "malloc_in_c_implementation.c",
-    "sets.c",
-    "balance_parenthesis_to_balance_string.c",
+    "sets.c"
     # Add more files here in the order you want
 ]
 
