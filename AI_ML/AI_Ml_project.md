@@ -456,4 +456,205 @@ TensorFlow (train on PC) → export as `.tflite` → quantize (INT8) → deploy 
 
 ---
 
+### Multi-Layer Perceptron (MLP) — Simplest Neural Network
+
+#### The Single Neuron (Perceptron)
+
+A single neuron computes:
+
+**z = Σ(wᵢ · xᵢ) + b**
+
+Which expands to: z = (w₁·x₁) + (w₂·x₂) + (w₃·x₃) + ... + b
+
+```
+Inputs         Weights         Sum + Bias        Activation       Output
+
+x₁ ──────── w₁ ──────┐
+                      │
+x₂ ──────── w₂ ──────┼──────► [ Σ(wi·xi) + b ] ──► f(z) ──────► y
+                      │              z
+x₃ ──────── w₃ ──────┘
+
+                      b (bias)
+```
+
+**What each part means:**
+
+| Symbol | What it is | Analogy |
+|---|---|---|
+| xᵢ | Inputs (your data — e.g., pixel values) | Raw ingredients |
+| wᵢ | Weights (learned during training) | How important each input is |
+| b | Bias (also learned) | A baseline offset |
+| z | Weighted sum — the neuron's raw calculation | Recipe result before cooking |
+| f(z) | Activation function (ReLU, sigmoid, etc.) | Decides if neuron "fires" |
+| y | Output | Final answer from this neuron |
+
+#### Concrete Example
+
+```
+x₁ = 200 (bright pixel),  x₂ = 50 (dark pixel),  x₃ = 150 (mid pixel)
+w₁ = 0.3,  w₂ = -0.1,  w₃ = 0.5,  b = 2.0
+
+z = (0.3 × 200) + (-0.1 × 50) + (0.5 × 150) + 2.0
+z = 60 + (-5) + 75 + 2 = 132
+
+After ReLU activation: y = max(0, 132) = 132
+```
+
+#### Multi-Layer Perceptron = Many Neurons Stacked
+
+```
+Input Layer      Hidden Layer 1     Hidden Layer 2      Output Layer
+(your data)      (learned features) (higher features)   (prediction)
+
+  x₁ ──────────►  n₁ ──────────────►  n₄ ─────────────►  y₁ (rock)
+       \        /    \            /      \
+  x₂ ───\────/────►  n₂ ───────/─────►  n₅ ─────────────►  y₂ (paper)
+       \  \/  /        \      /          /
+  x₃ ───\─/\─/──────►  n₃ ──/──────────/──────────────────►  y₃ (scissors)
+          /  \
+         every neuron connects to every neuron in next layer
+         (= "fully connected" or "dense" layer)
+```
+
+Each arrow has its own weight wᵢ. **Training** = finding the right values for ALL weights so the output matches the correct class.
+
+#### In TensorFlow (code):
+
+```python
+import tensorflow as tf
+
+model = tf.keras.Sequential([
+    tf.keras.layers.Flatten(input_shape=(320, 320, 3)),  # 307,200 inputs
+    tf.keras.layers.Dense(128, activation='relu'),        # Hidden layer: 128 neurons
+    tf.keras.layers.Dense(64, activation='relu'),         # Hidden layer: 64 neurons
+    tf.keras.layers.Dense(3, activation='softmax')        # Output: 3 classes (rock/paper/scissors)
+])
+```
+
+Each `Dense(128)` layer = 128 neurons, each computing z = Σ(wᵢ·xᵢ) + b then applying ReLU.
+
+#### Why this relates to the project:
+
+The YOLO model uses Conv2D instead of Dense layers, but at the **lowest level**, every operation in the neural network boils down to: **multiply, accumulate, add bias**. This is exactly what Helium's 16-wide INT8 MAC instructions accelerate — doing 16 of these wᵢ·xᵢ multiplications in a single CPU cycle.
+
+---
+
+### Basic CNN Architecture (Convolutional Neural Network)
+
+A CNN is designed to process **images**. Unlike MLP (which flattens all pixels into one long list), CNN preserves the **spatial structure** (2D grid) of the image and detects patterns locally.
+
+#### The 5 Core Layers
+
+```
+INPUT IMAGE (320×320×3 RGB)
+    │
+    ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  Layer 1: CONVOLUTIONAL LAYER                                    │
+│                                                                   │
+│  A small filter (e.g., 3×3) slides across the image.             │
+│  At each position, it does: Σ(filter × patch) + bias = 1 value  │
+│                                                                   │
+│  Input image         Filter (3×3)        Output (Feature Map)    │
+│  ┌───────────┐       ┌─────┐             ┌───────────┐          │
+│  │ . . . . . │       │ 1 0 │             │ . . . . . │          │
+│  │ . █ █ . . │   *   │ 0 1 │     =       │ . . 5 . . │          │
+│  │ . █ █ . . │       │ 1 0 │             │ . 3 . 2 . │          │
+│  │ . . . . . │       └─────┘             │ . . . . . │          │
+│  └───────────┘                           └───────────┘          │
+│                                                                   │
+│  Multiple filters → multiple feature maps (edges, corners, etc.) │
+└───────────────────────────────┬─────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  Layer 2: ACTIVATION (ReLU)                                      │
+│                                                                   │
+│  f(x) = max(0, x)                                                │
+│                                                                   │
+│  Negative values → 0,  Positive values → unchanged               │
+│  Purpose: introduce non-linearity (without this, stacking layers │
+│           would be no better than one layer)                      │
+└───────────────────────────────┬─────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  Layer 3: POOLING (Max Pooling)                                  │
+│                                                                   │
+│  Takes a 2×2 window, keeps only the MAX value                    │
+│                                                                   │
+│  ┌─────────┐         ┌─────┐                                    │
+│  │ 1  3 │ 2  4 │     │ 3 │ 4 │                                  │
+│  │ 5  2 │ 1  6 │ →   │ 5 │ 6 │    (halves the spatial size)    │
+│  └─────────┘         └─────┘                                    │
+│                                                                   │
+│  Purpose: reduces size (less computation), keeps important info   │
+│  320×320 → 160×160 → 80×80 → ... gets smaller each time         │
+└───────────────────────────────┬─────────────────────────────────┘
+                                │
+                                ▼
+            [Repeat Conv → ReLU → Pool several times]
+            (each layer detects higher-level features:
+             edges → textures → shapes → objects)
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  Layer 4: FLATTEN + FULLY CONNECTED (Dense)                      │
+│                                                                   │
+│  Flatten the final feature maps into a 1D vector                 │
+│  Then pass through Dense layers (like MLP):                      │
+│                                                                   │
+│  [10×10×64] → Flatten → [6400] → Dense(128) → Dense(64)         │
+│                                                                   │
+│  Purpose: learn which combination of features = which class      │
+└───────────────────────────────┬─────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  Layer 5: OUTPUT (Softmax)                                       │
+│                                                                   │
+│  Dense(3, activation='softmax')                                  │
+│                                                                   │
+│  Output: [0.05, 0.90, 0.05] = [rock, paper, scissors]           │
+│           ↑                                                       │
+│           "90% confident this is Paper"                           │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### What the Convolutional Filter Actually Does
+
+```
+Image patch (3×3)     Filter weights (3×3)       Result
+┌─────────────┐       ┌─────────────┐
+│ 10  20  30  │       │  1   0  -1  │
+│ 40  50  60  │   ×   │  1   0  -1  │  =  Σ = (10×1)+(20×0)+(30×-1)
+│ 70  80  90  │       │  1   0  -1  │       +(40×1)+(50×0)+(60×-1)
+└─────────────┘       └─────────────┘       +(70×1)+(80×0)+(90×-1)
+                                            = 10-30+40-60+70-90 = -60
+
+This particular filter detects VERTICAL EDGES (left vs right difference)
+```
+
+The filter slides across the entire image producing a **feature map** — a heatmap of where that pattern (edge, corner, curve) appears.
+
+#### CNN vs MLP — Why CNN is better for images
+
+| | MLP (Dense) | CNN (Convolutional) |
+|---|---|---|
+| Connections | Every pixel → every neuron | Small filter → local patch |
+| Parameters for 320×320×3 input | 307,200 × neurons = millions | 3×3×3 × num_filters = hundreds |
+| Spatial awareness | None (flat vector) | Preserves 2D structure |
+| Translation invariance | No (pixel moves = different input) | Yes (same filter detects pattern anywhere) |
+
+#### How this maps to the project
+
+The YOLO model on PSOC Edge is a CNN:
+- **Conv layers** detect visual features (finger shapes, hand edges)
+- **Pooling** reduces 320×320 down progressively
+- **Final layers** output bounding boxes + class scores
+- **Every Conv operation** = sliding a filter across the image = millions of MAC operations = exactly what Helium's 16-wide INT8 SIMD accelerates
+
+---
+
 
