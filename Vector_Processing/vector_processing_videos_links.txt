@@ -1,0 +1,5 @@
+https://www.youtube.com/watch?v=X_wPVFB8ikU
+https://learnlearn.uk/alevelcs/sisd-simd-misd-mimd/
+https://www.youtube.com/watch?v=dsZ5Hcdy-cs
+
+Read - https://www.influxdata.com/glossary/vector-processing-SIMD/
