@@ -47,11 +47,18 @@ void print_nodes(struct Node* head)
     }
     printf("NULL");
 }
+/*Even node example:
+Now for 1->2->3->4->2->1: slow stops at idx2 (value 3), so:
 
+first half = 1->2->3, second half = 4->2->1 → reversed 1->2->4
+compare: 1==1 ✓, 2==2 ✓, 3==4 ✗ → returns false ✅
+Also keep the reverse_nodes fix from before (return NULL, not (struct Node*)-1) 
+so single-node/empty second halves don't crash. With both changes the function is 
+correct for odd and even lengths. */
 struct Node* get_middle_node(struct Node * head)
 {
     struct Node* slow = head, *fast = head;
-    while(fast != NULL && fast->next != NULL)
+    while(fast->next != NULL && fast->next->next != NULL)//works for both even and odd nodes
     {
         slow = slow->next;
         fast = fast->next->next;
