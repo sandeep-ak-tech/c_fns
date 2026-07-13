@@ -1,3 +1,6 @@
 Shriram Shared Project:
 
 https://github.com/shriram-m/shared-projects
+
+Memory Layout of PSOC Edge:
+https://documentation.infineon.com/psocedge/docs/bwb1750411526047
